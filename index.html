@@ -263,6 +263,33 @@
   }
 </style>
 
+
+<style id="i18n-voice-css">
+  #voice-assistant {
+    position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 60;
+  }
+  #voice-toggle {
+    width: 3.25rem; height: 3.25rem; border-radius: 9999px;
+    display: grid; place-items: center; border: 2px solid rgb(var(--bordeaux));
+    background: rgb(var(--bordeaux)); color: white; box-shadow: 0 12px 30px rgba(0,0,0,.18);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  #voice-toggle:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 16px 34px rgba(0,0,0,.24); }
+  #voice-toggle.is-listening { animation: voicePulse 1.25s ease-in-out infinite; }
+  #voice-panel {
+    position: absolute; right: 0; bottom: 4.15rem; width: min(360px, calc(100vw - 2rem));
+    border: 1px solid rgb(var(--ardoise-line)); border-radius: 1.25rem;
+    background: rgb(var(--surface)); color: rgb(var(--navy)); padding: 1rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,.18); display: none;
+  }
+  #voice-panel.open { display: block; animation: voicePanelIn .25s ease both; }
+  #voice-status { min-height: 2.6rem; border-radius: .8rem; background: rgb(var(--fond)); padding: .65rem .75rem; font-size: .9rem; }
+  #voice-transcript { margin-top: .65rem; color: rgb(var(--ardoise)); font-size: .85rem; min-height: 1.2rem; }
+  @keyframes voicePulse { 50% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(180,30,60,.12); } }
+  @keyframes voicePanelIn { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (max-width: 640px) { #voice-assistant { right: 1rem; bottom: 1rem; } }
+</style>
+
 </head>
 
 <body class="transition-colors duration-300 bg-fond font-corps text-[17px] leading-relaxed text-navy antialiased">
@@ -295,6 +322,14 @@
           </a>
           <a href="#contact" class="nav-link nav-cta proto relative overflow-hidden rounded-full border-2 border-navy px-5 py-2 font-semibold transition-colors hover:bg-navy hover:text-inverse">Me contacter</a>
         </nav>
+        <div class="relative md:order-last">
+          <label for="language-select" class="sr-only">Langue</label>
+          <select id="language-select" class="h-10 rounded-full border-2 border-ardoise-line bg-fond px-3 text-sm font-semibold text-navy outline-none transition hover:border-navy" aria-label="Choisir la langue" title="Choisir la langue">
+            <option value="fr">FR</option>
+            <option value="en">EN</option>
+            <option value="wo">WO</option>
+          </select>
+        </div>
         <button id="theme-toggle" class="proto relative grid h-10 w-10 place-items-center overflow-hidden rounded-full border-2 border-ardoise-line text-navy transition-all duration-300 hover:border-navy active:scale-90 md:order-last" aria-label="Activer le mode sombre" title="Changer de thème">
           <!-- Lune : visible en mode clair -->
           <svg class="icone-theme h-5 w-5 transition-transform duration-500 ease-doux dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
@@ -1452,6 +1487,250 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   animateHero();
+});
+</script>
+
+
+<script id="i18n-voice-js">
+document.addEventListener("DOMContentLoaded", () => {
+  const languages = {
+    fr: { html: "fr", speech: "fr-FR", name: "Français" },
+    en: { html: "en", speech: "en-US", name: "English" },
+    wo: { html: "wo", speech: "wo-SN", name: "Wolof" }
+  };
+
+  const T = {
+    "Services": { en: "Services", wo: "Serwiis yi" },
+    "Compétences": { en: "Skills", wo: "Mën-mën yi" },
+    "Expériences": { en: "Experience", wo: "Expérience" },
+    "Projets": { en: "Projects", wo: "Proje yi" },
+    "Me contacter": { en: "Contact me", wo: "Jokkoo ak man" },
+    "Bonjour, je suis": { en: "Hello, I am", wo: "Salaam, maa ngi" },
+    "Étudiant en Génie Logiciel. Je conçois des applications web propres, utiles et bien structurées, du modèle de données jusqu'à l'interface.": { en: "Software Engineering student. I build clean, useful and well-structured web applications, from data models to user interfaces.", wo: "Jàngalekat ci Génie Logiciel. Damay def aplikasioŋ web yu leer, am solo te tabax bu baax, dale ci model données ba ci interface." },
+    "Travaillons ensemble": { en: "Let's work together", wo: "Nanu liggéeyandoo" },
+    "Services": { en: "Services", wo: "Serwiis yi" },
+    "Ce que je peux faire pour vous, seul ou au sein d'une équipe.": { en: "What I can do for you, alone or as part of a team.", wo: "Li ma mën defal la, man rekk walla ci biir ekip." },
+    "Développement web": { en: "Web development", wo: "Defar web" },
+    "Sites vitrines et applications web responsives en HTML, CSS et JavaScript, avec un code lisible et facile à maintenir.": { en: "Responsive websites and web applications in HTML, CSS and JavaScript, with clean and maintainable code.", wo: "Site yu web ak aplikasioŋ yu responsive ci HTML, CSS ak JavaScript, ak kod bu leer te yomb a saytu." },
+    "Applications back-end": { en: "Back-end applications", wo: "Aplikasioŋ back-end" },
+    "Création d'API et de logique serveur, gestion des utilisateurs, formulaires et traitements côté serveur.": { en: "API and server-side logic, user management, forms and server processing.", wo: "Defar API ak logique serveur, saytu jëfandikukat yi, formulaire ak traitement serveur." },
+    "Bases de données": { en: "Databases", wo: "Base données yi" },
+    "Modélisation (MCD, MLD), écriture de requêtes SQL et optimisation de la structure des données.": { en: "Data modeling (CDM, LDM), SQL queries and database structure optimization.", wo: "Model données (MCD, MLD), requêtes SQL ak gënal tabaxinu données." },
+    "Conception logicielle": { en: "Software design", wo: "Disiñ logiciel" },
+    "Analyse des besoins, diagrammes UML, découpage en tâches et documentation technique claire.": { en: "Requirements analysis, UML diagrams, task breakdown and clear technical documentation.", wo: "Xool soxla yi, diagramme UML, séddale liggéey yi ak bind téere technique bu leer." },
+    "Les outils et savoir-faire que j'utilise dans mes projets. Tous sont à un niveau intermédiaire et continuent de progresser.": { en: "The tools and skills I use in my projects. They are at an intermediate level and continuously improving.", wo: "Jëfandikoo ak xam-xam yi ma di jëfandikoo ci sama proje yi. Ñu ngi ci niveau intermédiaire te di yokk." },
+    "Tout": { en: "All", wo: "Yépp" },
+    "Développement": { en: "Development", wo: "Defar" },
+    "Outils et méthodes": { en: "Tools & methods", wo: "Jëfandikoo ak yoon" },
+    "Le cercle autour de chaque icône indique le niveau. Échelle : 0 à 40 % débutant, 40 à 70 % intermédiaire, au-delà de 70 % avancé.": { en: "The circle around each icon shows the level. Scale: 0–40% beginner, 40–70% intermediate, above 70% advanced.", wo: "Wër gi ci wet gu icône bi dafay wone niveau bi. Échelle: 0–40% tàmbali, 40–70% intermédiaire, lu ëpp 70% avancé." },
+    "Selected works / 2026": { en: "Selected works / 2026", wo: "Proje yu tànn / 2026" },
+    "Mes projets": { en: "My projects", wo: "Sama proje yi" },
+    "Une sélection de projets web et UI/UX. Cliquez sur une carte pour ouvrir directement le projet.": { en: "A selection of web and UI/UX projects. Click a card to open the project directly.", wo: "Proje web ak UI/UX yu ma tànn. Bësal ci kaart bi ngir ubbi projet bi." },
+    "Projet Figma": { en: "Figma project", wo: "Projet Figma" },
+    "Conception d'interfaces modernes, responsive et pensées pour une expérience utilisateur claire.": { en: "Modern, responsive interfaces designed for a clear user experience.", wo: "Disiñ interface yu bees, responsive te ñu defar leen ngir expérience jëfandikukat bu leer." },
+    "Boutique en ligne conçue pour présenter des produits et faciliter le parcours d'achat.": { en: "Online store designed to showcase products and make the buying journey easier.", wo: "Boutique online bu ñu defar ngir wone produits te yombal yoonu jënd." },
+    "Site vitrine et expérience de réservation pour un hôtel de charme à Saint-Louis du Sénégal.": { en: "Showcase website and booking experience for a boutique hotel in Saint-Louis, Senegal.", wo: "Site vitrine ak yoonu réservation ngir hôtel bu nekk Saint-Louis ci Senegaal." },
+    "Plateforme dédiée aux produits d'entretien, aux solutions de lavage et aux services de réparation.": { en: "Platform dedicated to cleaning products, washing solutions and repair services.", wo: "Plateforme bu jëm ci produits nettoyage, solutions lavage ak serwiis réparation." },
+    "Site responsive pour une salle de sport, avec identité noire et orange et présentation des programmes.": { en: "Responsive website for a gym, with a black and orange identity and program presentation.", wo: "Site responsive ngir salle de sport, ak identité noir ak orange, te wone programme yi." },
+    "Dépôt de mes travaux, expérimentations et projets de développement.": { en: "Repository of my work, experiments and development projects.", wo: "Dépôt bu sama liggéey, essais ak proje développement." },
+    "Expériences": { en: "Experience", wo: "Expérience" },
+    "Mon parcours, du plus récent au plus ancien.": { en: "My journey, from most recent to oldest.", wo: "Sama yoon, dale ci li mu gën a bees ba ci li mu gën a yàgg." },
+    "Licence en Génie Logiciel": { en: "Bachelor's degree in Software Engineering", wo: "Licence ci Génie Logiciel" },
+    "Stagiaire développeur web": { en: "Web developer intern", wo: "Stagiaire développeur web" },
+    "Projet académique : application de gestion": { en: "Academic project: management application", wo: "Projet académique: aplikasioŋ gestion" },
+    "Premiers projets personnels": { en: "First personal projects", wo: "Sama jëkk projet yu bopp" },
+    "Me contacter": { en: "Contact me", wo: "Jokkoo ak man" },
+    "Un projet, un stage ou une question ? Écrivez-moi, je réponds sous 48 heures.": { en: "A project, internship or question? Write to me, I reply within 48 hours.", wo: "Am nga projet, stage walla laaj? Bind ma, dinaa tontu ci 48 waxtu." },
+    "Nom complet": { en: "Full name", wo: "Tur wu mat" },
+    "Adresse email": { en: "Email address", wo: "Adresse email" },
+    "Sujet": { en: "Subject", wo: "Jëfandikoo" },
+    "Message": { en: "Message", wo: "Misaal" },
+    "Envoyer le message": { en: "Send message", wo: "Yónnee misaal bi" },
+    "Copier": { en: "Copy", wo: "Tëral" },
+    "Téléphone": { en: "Phone", wo: "Telefon" },
+    "Fait main en HTML, Tailwind CSS et JavaScript.": { en: "Handcrafted with HTML, Tailwind CSS and JavaScript.", wo: "Defar ak HTML, Tailwind CSS ak JavaScript." },
+    "Choisissez comment me contacter.": { en: "Choose how to contact me.", wo: "Tànnal ni nga bëgg a jokkoo ak man." },
+    "Écrire avec Gmail": { en: "Write with Gmail", wo: "Bind ak Gmail" },
+    "Ouvre un nouveau message dans Gmail": { en: "Opens a new message in Gmail", wo: "Dafay ubbi misaal bu bees ci Gmail" },
+    "Envoyer un SMS": { en: "Send an SMS", wo: "Yónnee SMS" },
+    "Envoyer un email": { en: "Send an email", wo: "Yónnee email" },
+    "Vous préférez écrire ici ?": { en: "Prefer to write here?", wo: "Bëgg nga bind fii?" },
+    "Utiliser le formulaire": { en: "Use the form", wo: "Jëfandikoo formulaire bi" },
+    "Copier": { en: "Copy", wo: "Copier" }
+  };
+
+  const ATTR = {
+    "Activer le mode sombre": { en: "Enable dark mode", wo: "Dugal mode lëndëm" },
+    "Changer de thème": { en: "Change theme", wo: "Soppi thème" },
+    "Ouvrir le menu": { en: "Open menu", wo: "Ubbi menu bi" },
+    "Projet précédent": { en: "Previous project", wo: "Projet bi jiitu" },
+    "Projet suivant": { en: "Next project", wo: "Projet bi topp" },
+    "Revenir en haut de la page": { en: "Back to top", wo: "Dellusi ci kaw" },
+    "Fermer": { en: "Close", wo: "Tëj" }
+  };
+
+  const originalNodes = [];
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let n;
+  while ((n = walker.nextNode())) {
+    const value = n.nodeValue.trim();
+    if (T[value]) originalNodes.push([n, value]);
+  }
+
+  const originalAttrs = [];
+  document.querySelectorAll("[aria-label], [title], [placeholder]").forEach(el => {
+    ["aria-label", "title", "placeholder"].forEach(attr => {
+      const value = el.getAttribute(attr);
+      if (value && ATTR[value]) originalAttrs.push([el, attr, value]);
+    });
+  });
+
+  const langSelect = document.getElementById("language-select");
+  const savedLang = localStorage.getItem("portfolio-language") || "fr";
+
+  function applyLanguage(lang) {
+    const chosen = languages[lang] || languages.fr;
+    document.documentElement.lang = chosen.html;
+    originalNodes.forEach(([node, key]) => {
+      node.nodeValue = (lang === "fr" || !T[key]?.[lang]) ? key : T[key][lang];
+    });
+    originalAttrs.forEach(([el, attr, key]) => {
+      el.setAttribute(attr, (lang === "fr" || !ATTR[key]?.[lang]) ? key : ATTR[key][lang]);
+    });
+    if (langSelect) langSelect.value = lang;
+    localStorage.setItem("portfolio-language", lang);
+    window.portfolioLanguage = chosen;
+    updateVoiceTexts();
+  }
+
+  if (langSelect) langSelect.addEventListener("change", e => applyLanguage(e.target.value));
+
+  // Assistant vocal
+  const voiceBox = document.createElement("div");
+  voiceBox.id = "voice-assistant";
+  voiceBox.innerHTML = `
+    <div id="voice-panel" role="dialog" aria-label="Assistant vocal">
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <strong id="voice-title" class="font-titre text-lg">Assistant vocal</strong>
+          <p id="voice-help" class="text-xs text-ardoise">Parlez pour naviguer ou demander une lecture.</p>
+        </div>
+        <button id="voice-close" type="button" class="rounded-full px-2 text-xl" aria-label="Fermer">×</button>
+      </div>
+      <div id="voice-status">Cliquez sur le micro puis parlez.</div>
+      <div id="voice-transcript"></div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="voice-read" type="button" class="rounded-full border border-ardoise-line px-3 py-1.5 text-sm font-semibold">Lire la page</button>
+        <button id="voice-stop" type="button" class="rounded-full border border-ardoise-line px-3 py-1.5 text-sm font-semibold">Arrêter</button>
+      </div>
+    </div>
+    <button id="voice-toggle" type="button" aria-label="Assistant vocal" title="Assistant vocal">
+      <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="9" y="2" width="6" height="13" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"></path>
+      </svg>
+    </button>`;
+  document.body.appendChild(voiceBox);
+
+  const panel = document.getElementById("voice-panel");
+  const toggle = document.getElementById("voice-toggle");
+  const status = document.getElementById("voice-status");
+  const transcript = document.getElementById("voice-transcript");
+  const recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognizer = null;
+
+  const voiceText = {
+    fr: { title:"Assistant vocal", help:"Parlez pour naviguer ou demander une lecture.", start:"Cliquez sur le micro puis parlez.", listening:"Je vous écoute…", unsupported:"La reconnaissance vocale n'est pas disponible dans ce navigateur. Essayez Chrome ou Edge.", wolofFallback:"La reconnaissance vocale en wolof dépend du navigateur. La voix de lecture peut utiliser une voix de remplacement.", understood:"J'ai compris : ", notUnderstood:"Commande non reconnue. Essayez : « ouvre les projets », « contacte-moi », « lis la page » ou « mode sombre »." },
+    en: { title:"Voice assistant", help:"Speak to navigate or ask for a page reading.", start:"Click the microphone and speak.", listening:"I'm listening…", unsupported:"Voice recognition is not available in this browser. Try Chrome or Edge.", wolofFallback:"Wolof voice recognition depends on browser support. Reading may use a fallback voice.", understood:"I understood: ", notUnderstood:"Command not recognized. Try: “open projects”, “contact me”, “read the page”, or “dark mode”." },
+    wo: { title:"Ndimmbalu baat", help:"Waxal ngir dem ci biir site bi walla ngir ma jàngal la xët bi.", start:"Bësal ci mikró bi te wax.", listening:"Damaa dégg…", unsupported:"Reconnaissance baat bi amul ci navigateur bii. Jëfandikool Chrome walla Edge.", wolofFallback:"Reconnaissance Wolof bi aju na ci navigateur. Jàng bi mën na jëfandikoo baat bu wérul Wolof.", understood:"Dégg naa la : ", notUnderstood:"Duma xam ndigal li. Waxal: « ubbi proje yi », « jokkoo ak man », « jàng xët bi » walla « mode lëndëm »." }
+  };
+
+  function currentLang() { return localStorage.getItem("portfolio-language") || "fr"; }
+  function updateVoiceTexts() {
+    const v = voiceText[currentLang()];
+    document.getElementById("voice-title").textContent = v.title;
+    document.getElementById("voice-help").textContent = v.help;
+    if (!toggle.classList.contains("is-listening")) status.textContent = v.start;
+  }
+
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const lang = currentLang();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = languages[lang].speech;
+    // Wolof voices are not consistently provided by browsers; use French as a gentle fallback.
+    const voices = window.speechSynthesis.getVoices();
+    const wanted = voices.find(v => v.lang.toLowerCase().startsWith(languages[lang].speech.slice(0,2).toLowerCase()));
+    if (wanted) u.voice = wanted;
+    else if (lang === "wo") {
+      const fr = voices.find(v => v.lang.toLowerCase().startsWith("fr"));
+      if (fr) u.voice = fr;
+    }
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  }
+
+  function readPage() {
+    const lang = currentLang();
+    const sections = ["accueil", "services", "competences", "projets", "experiences", "contact"];
+    const text = sections.map(id => {
+      const el = document.getElementById(id);
+      return el ? el.innerText.replace(/\s+/g, " ") : "";
+    }).filter(Boolean).join(". ").slice(0, 7000);
+    speak(text);
+    status.textContent = lang === "en" ? "Reading the page…" : lang === "wo" ? "Damaa jàng xët bi…" : "Lecture de la page…";
+  }
+
+  function go(id) {
+    const el = document.getElementById(id);
+    if (el) { el.scrollIntoView({ behavior: "smooth", block: "start" }); return true; }
+    return false;
+  }
+
+  function handleCommand(raw) {
+    const q = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const lang = currentLang();
+    const v = voiceText[lang];
+    transcript.textContent = raw;
+
+    if (/\b(projet|projets|projects|project|proje|ubbi proje)\b/.test(q)) { go("projets"); speak(lang === "en" ? "Opening projects." : lang === "wo" ? "Damaa ubbi proje yi." : "J'ouvre les projets."); return; }
+    if (/\b(contact|contacter|contacte|jokkoo)\b/.test(q)) { go("contact"); speak(lang === "en" ? "Opening contact." : lang === "wo" ? "Damaa ubbi jokkoo." : "J'ouvre le contact."); return; }
+    if (/\b(service|services|serwiis)\b/.test(q)) { go("services"); speak(lang === "en" ? "Opening services." : lang === "wo" ? "Damaa ubbi serwiis yi." : "J'ouvre les services."); return; }
+    if (/\b(competences|skills|mën-men|xam-xam)\b/.test(q)) { go("competences"); speak(lang === "en" ? "Opening skills." : lang === "wo" ? "Damaa ubbi mën-mën yi." : "J'ouvre les compétences."); return; }
+    if (/\b(experience|experiences|parcours|expérience)\b/.test(q)) { go("experiences"); speak(lang === "en" ? "Opening experience." : lang === "wo" ? "Damaa ubbi expérience bi." : "J'ouvre les expériences."); return; }
+    if (/\b(lis|lire|read|jangg|jang|lecture|xet)\b/.test(q)) { readPage(); return; }
+    if (/\b(arret|arrete|stop|arrête|tëj|tejal)\b/.test(q)) { window.speechSynthesis?.cancel(); recognizer?.stop(); status.textContent = v.start; return; }
+    if (/\b(sombre|dark|lëndëm|lendem)\b/.test(q)) { document.getElementById("theme-toggle")?.click(); speak(lang === "en" ? "Theme changed." : lang === "wo" ? "Thème bi soppi na." : "Le thème a été changé."); return; }
+    status.textContent = v.notUnderstood;
+    speak(v.notUnderstood);
+  }
+
+  function startRecognition() {
+    const lang = currentLang();
+    const v = voiceText[lang];
+    if (!recognition) { status.textContent = v.unsupported; return; }
+    if (recognizer) { try { recognizer.stop(); } catch(e){} }
+    recognizer = new recognition();
+    recognizer.lang = languages[lang].speech;
+    recognizer.interimResults = false;
+    recognizer.continuous = false;
+    recognizer.onstart = () => { toggle.classList.add("is-listening"); status.textContent = v.listening; };
+    recognizer.onresult = e => handleCommand(e.results[0][0].transcript);
+    recognizer.onerror = e => {
+      toggle.classList.remove("is-listening");
+      if (lang === "wo") status.textContent = v.wolofFallback + " " + (e.error || "");
+      else status.textContent = "Erreur : " + e.error;
+    };
+    recognizer.onend = () => toggle.classList.remove("is-listening");
+    try { recognizer.start(); } catch(e) { status.textContent = v.unsupported; }
+  }
+
+  toggle.addEventListener("click", () => { panel.classList.toggle("open"); if (panel.classList.contains("open")) startRecognition(); });
+  document.getElementById("voice-close").addEventListener("click", () => { panel.classList.remove("open"); recognizer?.stop(); window.speechSynthesis?.cancel(); });
+  document.getElementById("voice-read").addEventListener("click", readPage);
+  document.getElementById("voice-stop").addEventListener("click", () => { window.speechSynthesis?.cancel(); recognizer?.stop(); toggle.classList.remove("is-listening"); status.textContent = voiceText[currentLang()].start; });
+
+  applyLanguage(savedLang);
 });
 </script>
 
